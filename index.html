@@ -13,9 +13,25 @@ body {
     background: #f7f7f7;
 }
 
-h1 {
-    font-size: 32px;
-    margin-bottom: 18px;
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.header img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+}
+
+.header-title {
+    text-align: left;
+    font-size: 30px;
+    font-weight: bold;
+    line-height: 1.25;
 }
 
 button,
@@ -29,10 +45,11 @@ select {
 }
 
 .guide-text {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: bold;
     margin-top: 22px;
     margin-bottom: 10px;
+    white-space: nowrap;
 }
 
 .male {
@@ -72,22 +89,18 @@ td {
     border: 1px solid #ccc;
     padding: 10px 8px;
 }
-
-.logo-area {
-    margin-top: 18px;
-}
-
-.logo-area img {
-    width: 130px;
-    max-width: 50%;
-    background: transparent;
-}
 </style>
 </head>
 
 <body>
 
-<h1>YOLO ドッジボール<br>チームくじ</h1>
+<div class="header">
+    <img src="yolo-logo.png" alt="YOLO">
+    <div class="header-title">
+        ドッジボール<br>
+        チームくじ
+    </div>
+</div>
 
 <label>チーム数：</label>
 
@@ -119,10 +132,6 @@ td {
     </thead>
     <tbody id="teamTable"></tbody>
 </table>
-
-<div class="logo-area">
-    <img src="yolo-logo.png" alt="YOLO">
-</div>
 
 <script>
 const allTeams = ["RED", "BLUE", "ORANGE", "PINK", "WHITE"];
