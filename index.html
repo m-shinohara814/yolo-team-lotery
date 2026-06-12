@@ -20,14 +20,32 @@
       cursor: pointer;
     }
 
-    .male { background: #6aa9ff; }
-    .female { background: #ff8fc7; }
+    .male {
+      background: #6aa9ff;
+      color: black;
+    }
+
+    .female {
+      background: #ff8fc7;
+      color: black;
+    }
 
     #result {
-      font-size: 48px;
+      font-size: 56px;
       font-weight: bold;
       margin: 30px;
-      height: 60px;
+      height: 70px;
+    }
+
+    .team-red { color: red; }
+    .team-blue { color: blue; }
+    .team-orange { color: orange; }
+    .team-pink { color: deeppink; }
+    .team-white {
+      color: black;
+      background: white;
+      padding: 4px 12px;
+      border-radius: 8px;
     }
 
     table {
@@ -85,6 +103,10 @@
       return allTeams.slice(0, teamCount);
     }
 
+    function getTeamClass(team) {
+      return "team-" + team.toLowerCase();
+    }
+
     function resetTeams() {
       const teams = getTeams();
 
@@ -96,7 +118,10 @@
         counts[team] = { male: 0, female: 0 };
       });
 
-      document.getElementById("result").textContent = "？";
+      const result = document.getElementById("result");
+      result.textContent = "？";
+      result.className = "";
+
       renderTable();
     }
 
@@ -105,9 +130,11 @@
       const result = document.getElementById("result");
 
       let animationCount = 0;
+
       const animation = setInterval(() => {
         const randomTeam = teams[Math.floor(Math.random() * teams.length)];
         result.textContent = randomTeam;
+        result.className = getTeamClass(randomTeam);
         animationCount++;
 
         if (animationCount >= 15) {
@@ -126,6 +153,8 @@
           }
 
           result.textContent = selectedTeam;
+          result.className = getTeamClass(selectedTeam);
+
           renderTable();
         }
       }, 80);
@@ -137,7 +166,7 @@
 
       tbody.innerHTML = teams.map(team => `
         <tr>
-          <td>${team}</td>
+          <td class="${getTeamClass(team)}"><strong>${team}</strong></td>
           <td>${counts[team].male}</td>
           <td>${counts[team].female}</td>
         </tr>
