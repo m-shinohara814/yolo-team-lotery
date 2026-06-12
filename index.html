@@ -129,6 +129,7 @@ td {
             <th>チーム</th>
             <th>男子</th>
             <th>女子</th>
+            <th>合計</th>
         </tr>
     </thead>
     <tbody id="teamTable"></tbody>
@@ -223,6 +224,7 @@ function renderTable() {
             </td>
             <td>${counts[team].male}</td>
             <td>${counts[team].female}</td>
+            <td>${counts[team].male + counts[team].female}</td>
         </tr>
     `).join("");
 }
