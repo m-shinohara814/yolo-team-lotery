@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ドッジボールくじ引き</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 30px;
+      background: #f7f7f7;
+    }
+
+    button, select {
+      font-size: 20px;
+      padding: 12px 24px;
+      margin: 10px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .male { background: #6aa9ff; }
+    .female { background: #ff8fc7; }
+
+    #result {
+      font-size: 48px;
+      font-weight: bold;
+      margin: 30px;
+      height: 60px;
+    }
+
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      font-size: 20px;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>ドッジボール チームくじ</h1>
+
+  <label>チーム数：</label>
+  <select id="teamCount" onchange="resetTeams()">
+    <option value="2">2チーム</option>
+    <option value="3">3チーム</option>
+    <option value="4" selected>4チーム</option>
+    <option value="5">5チーム</option>
+  </select>
+
+  <div>
+    <button class="male" onclick="draw('male')">男子</button>
+    <button class="female" onclick="draw('female')">女子</button>
+  </div>
+
+  <div id="result">？</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>チーム</th>
+        <th>男子</th>
+        <th>女子</th>
+      </tr>
+    </thead>
+    <tbody id="teamTable"></tbody>
+  </table>
+
+  <script>
+    const allTeams = ["RED", "BLUE", "ORANGE", "PINK", "WHITE"];
+
+    let maleIndex = 0;
+    let femaleIndex = 0;
+    let counts = {};
+
+    function getTeams() {
+      const teamCount = Number(document.getElementById("teamCount").value);
+      return allTeams.slice(0, teamCount);
+    }
+
+    function resetTeams() {
+      const teams = getTeams();
+
+      maleIndex = 0;
+      femaleIndex = teams.length - 1;
+      counts = {};
+
+      teams.forEach(team => {
+        counts[team] = { male: 0, female: 0 };
+      });
+
+      document.getElementById("result").textContent = "？";
+      renderTable();
+    }
+
+    function draw(gender) {
+      const teams = getTeams();
+      const result = document.getElementById("result");
+
+      let animationCount = 0;
+      const animation = setInterval(() => {
+        const randomTeam = teams[Math.floor(Math.random() * teams.length)];
+        result.textContent = randomTeam;
+        animationCount++;
+
+        if (animationCount >= 15) {
+          clearInterval(animation);
+
+          let selectedTeam;
+
+          if (gender === "male") {
+            selectedTeam = teams[maleIndex];
+            maleIndex = (maleIndex + 1) % teams.length;
+            counts[selectedTeam].male++;
+          } else {
+            selectedTeam = teams[femaleIndex];
+            femaleIndex = (femaleIndex - 1 + teams.length) % teams.length;
+            counts[selectedTeam].female++;
+          }
+
+          result.textContent = selectedTeam;
+          renderTable();
+        }
+      }, 80);
+    }
+
+    function renderTable() {
+      const teams = getTeams();
+      const tbody = document.getElementById("teamTable");
+
+      tbody.innerHTML = teams.map(team => `
+        <tr>
+          <td>${team}</td>
+          <td>${counts[team].male}</td>
+          <td>${counts[team].female}</td>
+        </tr>
+      `).join("");
+    }
+
+    resetTeams();
+  </script>
+
+</body>
+</html>
