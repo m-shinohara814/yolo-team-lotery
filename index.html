@@ -137,7 +137,7 @@
         result.className = getTeamClass(randomTeam);
         animationCount++;
 
-        if (animationCount >= 15) {
+        if (animationCount >= 30) {
           clearInterval(animation);
 
           let selectedTeam;
@@ -162,9 +162,11 @@
 
     function renderTable() {
       const teams = getTeams();
+      const displayOrder = ["ORANGE", "BLUE", "PINK", "RED", "WHITE"];
+      const displayTeams = displayOrder.filter(team => teams.includes(team));
       const tbody = document.getElementById("teamTable");
 
-      tbody.innerHTML = teams.map(team => `
+      tbody.innerHTML = displayTeams.map(team => `
         <tr>
           <td class="${getTeamClass(team)}"><strong>${team}</strong></td>
           <td>${counts[team].male}</td>
