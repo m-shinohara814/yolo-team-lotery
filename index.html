@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -36,20 +37,35 @@ body {
 
 button,
 select {
-    font-size: 20px;
-    padding: 10px 22px;
-    margin: 8px;
+    font-size: 18px;
+    padding: 10px 14px;
+    margin: 6px;
     border-radius: 10px;
     border: none;
     cursor: pointer;
 }
 
+button small {
+    font-size: 14px;
+}
+
 .guide-text {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
     margin-top: 22px;
     margin-bottom: 10px;
     white-space: nowrap;
+}
+
+.guide-text span {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.button-area {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .male {
@@ -57,8 +73,18 @@ select {
     color: black;
 }
 
+.strong-male {
+    background: #2f7df6;
+    color: black;
+}
+
 .female {
     background: #ff8fc7;
+    color: black;
+}
+
+.strong-female {
+    background: #ff4fa3;
     color: black;
 }
 
@@ -81,13 +107,13 @@ table {
     margin: 10px auto;
     border-collapse: collapse;
     background: white;
-    font-size: 20px;
+    font-size: 16px;
 }
 
 th,
 td {
     border: 1px solid #ccc;
-    padding: 10px 8px;
+    padding: 8px 4px;
 }
 </style>
 </head>
@@ -112,13 +138,30 @@ td {
 </select>
 
 <p class="guide-text">
-    どちらかのボタンを押してください<br>
-    <span>Tap Men or Women</span>
+    いずれかのボタンを押してください<br>
+    <span>Tap one of the buttons</span>
 </p>
 
-<div>
-    <button class="male" onclick="draw('male')">男子 / Men</button>
-    <button class="female" onclick="draw('female')">女子 / Women</button>
+<div class="button-area">
+    <button class="male" onclick="draw('male')">
+        男子<br>
+        <small>Men</small>
+    </button>
+
+    <button class="strong-male" onclick="draw('strongMale')">
+        強い男子<br>
+        <small>Strong Men</small>
+    </button>
+
+    <button class="female" onclick="draw('female')">
+        女子<br>
+        <small>Women</small>
+    </button>
+
+    <button class="strong-female" onclick="draw('strongFemale')">
+        強い女子<br>
+        <small>Strong Women</small>
+    </button>
 </div>
 
 <div id="result">？</div>
@@ -128,7 +171,9 @@ td {
         <tr>
             <th>チーム</th>
             <th>男子</th>
+            <th>強男</th>
             <th>女子</th>
+            <th>強女</th>
             <th>合計</th>
         </tr>
     </thead>
@@ -138,8 +183,7 @@ td {
 <script>
 const allTeams = ["RED", "BLUE", "ORANGE", "PINK", "WHITE"];
 
-let maleIndex = 0;
-let femaleIndex = 0;
+let indexes = {};
 let counts = {};
 
 function getTeams() {
@@ -154,14 +198,21 @@ function getTeamClass(team) {
 function resetTeams() {
     const teams = getTeams();
 
-    maleIndex = 0;
-    femaleIndex = teams.length - 1;
+    indexes = {
+        male: 0,
+        strongMale: teams.length - 1,
+        female: teams.length - 1,
+        strongFemale: 0
+    };
+
     counts = {};
 
     teams.forEach(team => {
         counts[team] = {
             male: 0,
-            female: 0
+            strongMale: 0,
+            female: 0,
+            strongFemale: 0
         };
     });
 
@@ -172,7 +223,7 @@ function resetTeams() {
     renderTable();
 }
 
-function draw(gender) {
+function draw(type) {
     const teams = getTeams();
     const result = document.getElementById("result");
 
@@ -189,17 +240,15 @@ function draw(gender) {
         if (animationCount >= 30) {
             clearInterval(animation);
 
-            let selectedTeam;
+            let selectedTeam = teams[indexes[type]];
 
-            if (gender === "male") {
-                selectedTeam = teams[maleIndex];
-                maleIndex = (maleIndex + 1) % teams.length;
-                counts[selectedTeam].male++;
+            if (type === "male" || type === "strongFemale") {
+                indexes[type] = (indexes[type] + 1) % teams.length;
             } else {
-                selectedTeam = teams[femaleIndex];
-                femaleIndex = (femaleIndex - 1 + teams.length) % teams.length;
-                counts[selectedTeam].female++;
+                indexes[type] = (indexes[type] - 1 + teams.length) % teams.length;
             }
+
+            counts[selectedTeam][type]++;
 
             result.textContent = selectedTeam;
             result.className = getTeamClass(selectedTeam);
@@ -217,16 +266,26 @@ function renderTable() {
 
     const tbody = document.getElementById("teamTable");
 
-    tbody.innerHTML = displayTeams.map(team => `
-        <tr>
-            <td class="${getTeamClass(team)}">
-                <strong>${team}</strong>
-            </td>
-            <td>${counts[team].male}</td>
-            <td>${counts[team].female}</td>
-            <td>${counts[team].male + counts[team].female}</td>
-        </tr>
-    `).join("");
+    tbody.innerHTML = displayTeams.map(team => {
+        const total =
+            counts[team].male +
+            counts[team].strongMale +
+            counts[team].female +
+            counts[team].strongFemale;
+
+        return `
+            <tr>
+                <td class="${getTeamClass(team)}">
+                    <strong>${team}</strong>
+                </td>
+                <td>${counts[team].male}</td>
+                <td>${counts[team].strongMale}</td>
+                <td>${counts[team].female}</td>
+                <td>${counts[team].strongFemale}</td>
+                <td>${total}</td>
+            </tr>
+        `;
+    }).join("");
 }
 
 resetTeams();
@@ -234,3 +293,4 @@ resetTeams();
 
 </body>
 </html>
+```
