@@ -194,6 +194,7 @@ td {
 </table>
 
 <script>
+const STORAGE_KEY = "yoloDodgeballLotteryData";
 const allTeams = ["RED", "BLUE", "ORANGE", "PINK", "WHITE"];
 
 let indexes = {};
@@ -208,20 +209,20 @@ function getTeamClass(team) {
     return "team-" + team.toLowerCase();
 }
 
-function resetTeams() {
-    const teams = getTeams();
-
-    indexes = {
+function createInitialIndexes(teams) {
+    return {
         male: 0,
         strongMale: teams.length - 1,
         female: teams.length - 1,
         strongFemale: 0
     };
+}
 
-    counts = {};
+function createInitialCounts(teams) {
+    const initialCounts = {};
 
     teams.forEach(team => {
-        counts[team] = {
+        initialCounts[team] = {
             male: 0,
             strongMale: 0,
             female: 0,
@@ -229,11 +230,76 @@ function resetTeams() {
         };
     });
 
+    return initialCounts;
+}
+
+function saveData() {
+    const data = {
+        teamCount: document.getElementById("teamCount").value,
+        indexes: indexes,
+        counts: counts,
+        resultText: document.getElementById("result").textContent,
+        resultClass: document.getElementById("result").className
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadData() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) {
+        resetTeams(false);
+        return;
+    }
+
+    try {
+        const data = JSON.parse(saved);
+
+        document.getElementById("teamCount").value = data.teamCount || "4";
+
+        const teams = getTeams();
+
+        indexes = data.indexes || createInitialIndexes(teams);
+        counts = data.counts || createInitialCounts(teams);
+
+        teams.forEach(team => {
+            if (!counts[team]) {
+                counts[team] = {
+                    male: 0,
+                    strongMale: 0,
+                    female: 0,
+                    strongFemale: 0
+                };
+            }
+        });
+
+        const result = document.getElementById("result");
+        result.textContent = data.resultText || "？";
+        result.className = data.resultClass || "";
+
+        renderTable();
+
+    } catch (e) {
+        resetTeams(false);
+    }
+}
+
+function resetTeams(shouldSave = true) {
+    const teams = getTeams();
+
+    indexes = createInitialIndexes(teams);
+    counts = createInitialCounts(teams);
+
     const result = document.getElementById("result");
     result.textContent = "？";
     result.className = "";
 
     renderTable();
+
+    if (shouldSave) {
+        saveData();
+    }
 }
 
 function draw(type) {
@@ -267,6 +333,7 @@ function draw(type) {
             result.className = getTeamClass(selectedTeam);
 
             renderTable();
+            saveData();
         }
     }, 80);
 }
@@ -301,7 +368,7 @@ function renderTable() {
     }).join("");
 }
 
-resetTeams();
+loadData();
 </script>
 
 </body>
