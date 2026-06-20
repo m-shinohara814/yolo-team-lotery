@@ -197,6 +197,7 @@ td {
 const STORAGE_KEY = "yoloDodgeballLotteryData";
 const allTeams = ["RED", "BLUE", "ORANGE", "PINK", "WHITE"];
 
+let indexes = {};
 let counts = {};
 
 function getTeams() {
@@ -206,6 +207,15 @@ function getTeams() {
 
 function getTeamClass(team) {
     return "team-" + team.toLowerCase();
+}
+
+function createInitialIndexes(teams) {
+    return {
+        male: 0,
+        strongMale: teams.length - 1,
+        female: teams.length - 1,
+        strongFemale: 0
+    };
 }
 
 function createInitialCounts(teams) {
@@ -223,30 +233,10 @@ function createInitialCounts(teams) {
     return initialCounts;
 }
 
-function getTotal(team) {
-    return counts[team].male +
-        counts[team].strongMale +
-        counts[team].female +
-        counts[team].strongFemale;
-}
-
-function selectBestTeam(type, teams) {
-    return teams.slice().sort((a, b) => {
-        if (counts[a][type] !== counts[b][type]) {
-            return counts[a][type] - counts[b][type];
-        }
-
-        if (getTotal(a) !== getTotal(b)) {
-            return getTotal(a) - getTotal(b);
-        }
-
-        return allTeams.indexOf(a) - allTeams.indexOf(b);
-    })[0];
-}
-
 function saveData() {
     const data = {
         teamCount: document.getElementById("teamCount").value,
+        indexes: indexes,
         counts: counts,
         resultText: document.getElementById("result").textContent,
         resultClass: document.getElementById("result").className
@@ -269,6 +259,8 @@ function loadData() {
         document.getElementById("teamCount").value = data.teamCount || "4";
 
         const teams = getTeams();
+
+        indexes = data.indexes || createInitialIndexes(teams);
         counts = data.counts || createInitialCounts(teams);
 
         teams.forEach(team => {
@@ -296,6 +288,7 @@ function loadData() {
 function resetTeams(shouldSave = true) {
     const teams = getTeams();
 
+    indexes = createInitialIndexes(teams);
     counts = createInitialCounts(teams);
 
     const result = document.getElementById("result");
@@ -307,6 +300,42 @@ function resetTeams(shouldSave = true) {
     if (shouldSave) {
         saveData();
     }
+}
+
+function getTotal(team) {
+    return (
+        counts[team].male +
+        counts[team].strongMale +
+        counts[team].female +
+        counts[team].strongFemale
+    );
+}
+
+function getGenderTotal(team, type) {
+    if (type === "male" || type === "strongMale") {
+        return counts[team].male + counts[team].strongMale;
+    }
+
+    return counts[team].female + counts[team].strongFemale;
+}
+
+function findBestTeam(type) {
+    const teams = getTeams();
+
+    return teams
+        .slice()
+        .sort((a, b) => {
+            const totalDiff = getTotal(a) - getTotal(b);
+            if (totalDiff !== 0) return totalDiff;
+
+            const categoryDiff = counts[a][type] - counts[b][type];
+            if (categoryDiff !== 0) return categoryDiff;
+
+            const genderDiff = getGenderTotal(a, type) - getGenderTotal(b, type);
+            if (genderDiff !== 0) return genderDiff;
+
+            return allTeams.indexOf(a) - allTeams.indexOf(b);
+        })[0];
 }
 
 function draw(type) {
@@ -326,7 +355,7 @@ function draw(type) {
         if (animationCount >= 30) {
             clearInterval(animation);
 
-            const selectedTeam = selectBestTeam(type, teams);
+            const selectedTeam = findBestTeam(type);
 
             counts[selectedTeam][type]++;
 
