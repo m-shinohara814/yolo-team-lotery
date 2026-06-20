@@ -320,7 +320,7 @@ function draw(type) {
             clearInterval(animation);
 
             let selectedTeam = teams[indexes[type]];
-
+            
             if (type === "male" || type === "strongFemale") {
                 indexes[type] = (indexes[type] + 1) % teams.length;
             } else {
