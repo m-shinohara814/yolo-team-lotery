@@ -104,15 +104,33 @@ button small {
 #result {
     font-size: 64px;
     font-weight: bold;
-    margin: 0px 0;
+    margin: 0;
     min-height: 80px;
 }
 
-.team-red { color: red; }
-.team-blue { color: blue; }
-.team-orange { color: orange; }
-.team-pink { color: deeppink; }
-.team-white { color: black; }
+.team-red {
+    color: red;
+}
+
+.team-blue {
+    color: blue;
+}
+
+.team-orange {
+    color: orange;
+}
+
+.team-pink {
+    color: deeppink;
+}
+
+.team-white {
+    color: black;
+}
+
+.team-green {
+    color: green;
+}
 
 table {
     width: 100%;
@@ -135,19 +153,21 @@ td {
 
 <div class="header">
     <img src="yolo-logo.png" alt="YOLO">
+
     <div class="header-title">
         ドッジボール<br>
         チームくじ
     </div>
 </div>
 
-<label>チーム数：</label>
+<label for="teamCount">チーム数：</label>
 
 <select id="teamCount" onchange="resetTeams()">
     <option value="2">2チーム</option>
     <option value="3">3チーム</option>
-    <option value="4" selected>4チーム</option>
+    <option value="4">4チーム</option>
     <option value="5">5チーム</option>
+    <option value="6" selected>6チーム</option>
 </select>
 
 <p class="guide-text">
@@ -190,18 +210,30 @@ td {
             <th>合計</th>
         </tr>
     </thead>
+
     <tbody id="teamTable"></tbody>
 </table>
 
 <script>
-const STORAGE_KEY = "yoloDodgeballLotteryData";
-const allTeams = ["RED", "BLUE", "ORANGE", "PINK", "WHITE"];
+const STORAGE_KEY = "yoloDodgeballLotteryDataV2";
 
-let indexes = {};
+const allTeams = [
+    "RED",
+    "BLUE",
+    "ORANGE",
+    "PINK",
+    "WHITE",
+    "GREEN"
+];
+
 let counts = {};
+let isDrawing = false;
 
 function getTeams() {
-    const teamCount = Number(document.getElementById("teamCount").value);
+    const teamCount = Number(
+        document.getElementById("teamCount").value
+    );
+
     return allTeams.slice(0, teamCount);
 }
 
@@ -209,11 +241,11 @@ function getTeamClass(team) {
     return "team-" + team.toLowerCase();
 }
 
-function createInitialIndexes(teams) {
+function createEmptyTeamCount() {
     return {
         male: 0,
-        strongMale: teams.length - 1,
-        female: teams.length - 1,
+        strongMale: 0,
+        female: 0,
         strongFemale: 0
     };
 }
@@ -222,27 +254,26 @@ function createInitialCounts(teams) {
     const initialCounts = {};
 
     teams.forEach(team => {
-        initialCounts[team] = {
-            male: 0,
-            strongMale: 0,
-            female: 0,
-            strongFemale: 0
-        };
+        initialCounts[team] = createEmptyTeamCount();
     });
 
     return initialCounts;
 }
 
 function saveData() {
+    const result = document.getElementById("result");
+
     const data = {
         teamCount: document.getElementById("teamCount").value,
-        indexes: indexes,
         counts: counts,
-        resultText: document.getElementById("result").textContent,
-        resultClass: document.getElementById("result").className
+        resultText: result.textContent,
+        resultClass: result.className
     };
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+    );
 }
 
 function loadData() {
@@ -256,42 +287,42 @@ function loadData() {
     try {
         const data = JSON.parse(saved);
 
-        document.getElementById("teamCount").value = data.teamCount || "4";
+        document.getElementById("teamCount").value =
+            data.teamCount || "6";
 
         const teams = getTeams();
 
-        indexes = data.indexes || createInitialIndexes(teams);
         counts = data.counts || createInitialCounts(teams);
 
         teams.forEach(team => {
             if (!counts[team]) {
-                counts[team] = {
-                    male: 0,
-                    strongMale: 0,
-                    female: 0,
-                    strongFemale: 0
-                };
+                counts[team] = createEmptyTeamCount();
             }
         });
 
         const result = document.getElementById("result");
+
         result.textContent = data.resultText || "？";
         result.className = data.resultClass || "";
 
         renderTable();
 
-    } catch (e) {
+    } catch (error) {
         resetTeams(false);
     }
 }
 
 function resetTeams(shouldSave = true) {
+    if (isDrawing) {
+        return;
+    }
+
     const teams = getTeams();
 
-    indexes = createInitialIndexes(teams);
     counts = createInitialCounts(teams);
 
     const result = document.getElementById("result");
+
     result.textContent = "？";
     result.className = "";
 
@@ -312,11 +343,21 @@ function getTotal(team) {
 }
 
 function getGenderTotal(team, type) {
-    if (type === "male" || type === "strongMale") {
-        return counts[team].male + counts[team].strongMale;
+    const isMale =
+        type === "male" ||
+        type === "strongMale";
+
+    if (isMale) {
+        return (
+            counts[team].male +
+            counts[team].strongMale
+        );
     }
 
-    return counts[team].female + counts[team].strongFemale;
+    return (
+        counts[team].female +
+        counts[team].strongFemale
+    );
 }
 
 function findBestTeam(type) {
@@ -324,28 +365,79 @@ function findBestTeam(type) {
 
     return teams
         .slice()
-        .sort((a, b) => {
-            const totalDiff = getTotal(a) - getTotal(b);
-            if (totalDiff !== 0) return totalDiff;
+        .sort((teamA, teamB) => {
+            /*
+             * 優先順位1：
+             * チーム合計人数が少ないチーム
+             */
+            const totalDifference =
+                getTotal(teamA) - getTotal(teamB);
 
-            const categoryDiff = counts[a][type] - counts[b][type];
-            if (categoryDiff !== 0) return categoryDiff;
+            if (totalDifference !== 0) {
+                return totalDifference;
+            }
 
-            const genderDiff = getGenderTotal(a, type) - getGenderTotal(b, type);
-            if (genderDiff !== 0) return genderDiff;
+            /*
+             * 優先順位2：
+             * 今回押された分類が少ないチーム
+             */
+            const categoryDifference =
+                counts[teamA][type] -
+                counts[teamB][type];
 
-            return allTeams.indexOf(a) - allTeams.indexOf(b);
+            if (categoryDifference !== 0) {
+                return categoryDifference;
+            }
+
+            /*
+             * 優先順位3：
+             * 同じ性別の合計が少ないチーム
+             */
+            const genderDifference =
+                getGenderTotal(teamA, type) -
+                getGenderTotal(teamB, type);
+
+            if (genderDifference !== 0) {
+                return genderDifference;
+            }
+
+            /*
+             * すべて同じ場合は固定順で決定
+             */
+            return (
+                allTeams.indexOf(teamA) -
+                allTeams.indexOf(teamB)
+            );
         })[0];
 }
 
+function setButtonsDisabled(disabled) {
+    const buttons =
+        document.querySelectorAll(".button-area button");
+
+    buttons.forEach(button => {
+        button.disabled = disabled;
+    });
+}
+
 function draw(type) {
+    if (isDrawing) {
+        return;
+    }
+
+    isDrawing = true;
+    setButtonsDisabled(true);
+
     const teams = getTeams();
     const result = document.getElementById("result");
 
     let animationCount = 0;
 
     const animation = setInterval(() => {
-        const randomTeam = teams[Math.floor(Math.random() * teams.length)];
+        const randomTeam =
+            teams[
+                Math.floor(Math.random() * teams.length)
+            ];
 
         result.textContent = randomTeam;
         result.className = getTeamClass(randomTeam);
@@ -360,10 +452,14 @@ function draw(type) {
             counts[selectedTeam][type]++;
 
             result.textContent = selectedTeam;
-            result.className = getTeamClass(selectedTeam);
+            result.className =
+                getTeamClass(selectedTeam);
 
             renderTable();
             saveData();
+
+            isDrawing = false;
+            setButtonsDisabled(false);
         }
     }, 80);
 }
@@ -371,31 +467,42 @@ function draw(type) {
 function renderTable() {
     const teams = getTeams();
 
-    const displayOrder = ["ORANGE", "BLUE", "PINK", "RED", "WHITE"];
-    const displayTeams = displayOrder.filter(team => teams.includes(team));
+    const displayOrder = [
+        "ORANGE",
+        "BLUE",
+        "PINK",
+        "RED",
+        "WHITE",
+        "GREEN"
+    ];
 
-    const tbody = document.getElementById("teamTable");
+    const displayTeams =
+        displayOrder.filter(team =>
+            teams.includes(team)
+        );
 
-    tbody.innerHTML = displayTeams.map(team => {
-        const total =
-            counts[team].male +
-            counts[team].strongMale +
-            counts[team].female +
-            counts[team].strongFemale;
+    const tbody =
+        document.getElementById("teamTable");
 
-        return `
-            <tr>
-                <td class="${getTeamClass(team)}">
-                    <strong>${team}</strong>
-                </td>
-                <td>${counts[team].male}</td>
-                <td>${counts[team].strongMale}</td>
-                <td>${counts[team].female}</td>
-                <td>${counts[team].strongFemale}</td>
-                <td>${total}</td>
-            </tr>
-        `;
-    }).join("");
+    tbody.innerHTML = displayTeams
+        .map(team => {
+            const total = getTotal(team);
+
+            return `
+                <tr>
+                    <td class="${getTeamClass(team)}">
+                        <strong>${team}</strong>
+                    </td>
+
+                    <td>${counts[team].male}</td>
+                    <td>${counts[team].strongMale}</td>
+                    <td>${counts[team].female}</td>
+                    <td>${counts[team].strongFemale}</td>
+                    <td>${total}</td>
+                </tr>
+            `;
+        })
+        .join("");
 }
 
 loadData();
