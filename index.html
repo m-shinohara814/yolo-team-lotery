@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YOLO ドッジボール チームくじ</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    text-align: center;
+    padding: 12px;
+    margin: 0;
+    background: #f7f7f7;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.header img {
+    width: 108px;
+    height: 108px;
+    object-fit: contain;
+}
+
+.header-title {
+    text-align: left;
+    font-size: 30px;
+    font-weight: bold;
+    line-height: 1.25;
+}
+
+button,
+select {
+    font-size: 18px;
+    padding: 10px 14px;
+    margin: 6px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+button small {
+    font-size: 14px;
+}
+
+.guide-text {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 22px;
+    margin-bottom: 10px;
+    white-space: nowrap;
+}
+
+.guide-text span {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.button-area {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.button-area button {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 10px 2px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.button-area button small {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.male {
+    background: #6aa9ff;
+    color: black;
+}
+
+.strong-male {
+    background: #2f7df6;
+    color: black;
+}
+
+.female {
+    background: #ff8fc7;
+    color: black;
+}
+
+.strong-female {
+    background: #ff4fa3;
+    color: black;
+}
+
+#result {
+    font-size: 64px;
+    font-weight: bold;
+    margin: 0;
+    min-height: 80px;
+}
+
+.team-red {
+    color: red;
+}
+
+.team-blue {
+    color: blue;
+}
+
+.team-orange {
+    color: orange;
+}
+
+.team-pink {
+    color: deeppink;
+}
+
+.team-white {
+    color: black;
+}
+
+.team-green {
+    color: green;
+}
+
+table {
+    width: 100%;
+    max-width: 420px;
+    margin: 10px auto;
+    border-collapse: collapse;
+    background: white;
+    font-size: 16px;
+    table-layout: fixed;
+}
+
+th,
+td {
+    border: 1px solid #ccc;
+    padding: 8px 3px;
+    word-break: keep-all;
+}
+
+th:first-child,
+td:first-child {
+    width: 28%;
+}
+
+.companion-area {
+    max-width: 420px;
+    margin: 18px auto 0;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
+}
+
+.companion-button {
+    width: 170px;
+    margin: 0;
+    padding: 9px 10px;
+    background: #d9d9d9;
+    color: #333;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.companion-button small {
+    font-size: 12px;
+}
+
+.companion-note {
+    margin: 5px 0 0;
+    color: #777;
+    font-size: 11px;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal {
+    width: 100%;
+    max-width: 360px;
+    padding: 20px 14px 14px;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal h2 {
+    margin: 0 0 4px;
+    font-size: 21px;
+}
+
+.modal-description {
+    margin: 0 0 14px;
+    color: #555;
+    font-size: 13px;
+}
+
+.companion-types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.companion-types button {
+    width: 100%;
+    margin: 0;
+    padding: 11px 4px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.close-modal {
+    width: 100%;
+    margin: 12px 0 0;
+    padding: 9px;
+    background: #eee;
+    color: #444;
+    font-size: 14px;
+}
+
+.message {
+    min-height: 18px;
+    margin: 7px 0 0;
+    color: #b00020;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+@media (max-width: 380px) {
+    .header img {
+        width: 92px;
+        height: 92px;
+    }
+
+    .header-title {
+        font-size: 27px;
+    }
+
+    .button-area button {
+        font-size: 14px;
+    }
+
+    .button-area button small {
+        font-size: 11px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <img src="yolo-logo.png" alt="YOLO">
+
+    <div class="header-title">
+        ドッジボール<br>
+        チームくじ
+    </div>
+</div>
+
+<label for="teamCount">チーム数：</label>
+
+<select id="teamCount" onchange="resetTeams()">
+    <option value="2">2チーム</option>
+    <option value="3">3チーム</option>
+    <option value="4">4チーム</option>
+    <option value="5">5チーム</option>
+    <option value="6" selected>6チーム</option>
+</select>
+
+<p class="guide-text">
+    いずれかのボタンを押してください<br>
+    <span>Tap one of the buttons</span>
+</p>
+
+<div class="button-area">
+    <button class="male" onclick="draw('male')">
+        普通男子<br>
+        <small>Men</small>
+    </button>
+
+    <button class="strong-male" onclick="draw('strongMale')">
+        強い男子<br>
+        <small>Skilled Men</small>
+    </button>
+
+    <button class="female" onclick="draw('female')">
+        普通女子<br>
+        <small>Women</small>
+    </button>
+
+    <button class="strong-female" onclick="draw('strongFemale')">
+        強い女子<br>
+        <small>Skilled Women</small>
+    </button>
+</div>
+
+<div id="result">？</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>チーム</th>
+            <th>男子</th>
+            <th>強男</th>
+            <th>女子</th>
+            <th>強女</th>
+            <th>合計</th>
+        </tr>
+    </thead>
+
+    <tbody id="teamTable"></tbody>
+</table>
+
+<div class="companion-area">
+    <button
+        id="companionButton"
+        class="companion-button"
+        onclick="openCompanionModal()"
+    >
+        同行者追加<br>
+        <small>Companion</small>
+    </button>
+
+    <p class="companion-note">直前の人と同じチームに追加します（運営用）</p>
+    <p id="message" class="message"></p>
+</div>
+
+<div
+    id="companionModal"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="companionTitle"
+>
+    <div class="modal">
+        <h2 id="companionTitle">同行者の種類</h2>
+        <p class="modal-description">
+            直前の人と同じチームに追加します
+        </p>
+
+        <div class="companion-types">
+            <button class="male" onclick="addCompanion('male')">
+                普通男子<br>
+                <small>Men</small>
+            </button>
+
+            <button class="strong-male" onclick="addCompanion('strongMale')">
+                強い男子<br>
+                <small>Skilled Men</small>
+            </button>
+
+            <button class="female" onclick="addCompanion('female')">
+                普通女子<br>
+                <small>Women</small>
+            </button>
+
+            <button class="strong-female" onclick="addCompanion('strongFemale')">
+                強い女子<br>
+                <small>Skilled Women</small>
+            </button>
+        </div>
+
+        <button class="close-modal" onclick="closeCompanionModal()">
+            閉じる
+        </button>
+    </div>
+</div>
+
+<script>
+const STORAGE_KEY = "yoloDodgeballLotteryDataV3";
+
+const allTeams = [
+    "RED",
+    "BLUE",
+    "ORANGE",
+    "PINK",
+    "WHITE",
+    "GREEN"
+];
+
+let counts = {};
+let isDrawing = false;
+let lastSelectedTeam = null;
+
+function getTeams() {
+    const teamCount = Number(
+        document.getElementById("teamCount").value
+    );
+
+    return allTeams.slice(0, teamCount);
+}
+
+function getTeamClass(team) {
+    return "team-" + team.toLowerCase();
+}
+
+function createEmptyTeamCount() {
+    return {
+        male: 0,
+        strongMale: 0,
+        female: 0,
+        strongFemale: 0
+    };
+}
+
+function createInitialCounts(teams) {
+    const initialCounts = {};
+
+    teams.forEach(team => {
+        initialCounts[team] = createEmptyTeamCount();
+    });
+
+    return initialCounts;
+}
+
+function setMessage(text) {
+    document.getElementById("message").textContent = text;
+}
+
+function saveData() {
+    const result = document.getElementById("result");
+
+    const data = {
+        teamCount: document.getElementById("teamCount").value,
+        counts: counts,
+        resultText: result.textContent,
+        resultClass: result.className,
+        lastSelectedTeam: lastSelectedTeam
+    };
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+    );
+}
+
+function loadData() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) {
+        resetTeams(false);
+        return;
+    }
+
+    try {
+        const data = JSON.parse(saved);
+
+        document.getElementById("teamCount").value =
+            data.teamCount || "6";
+
+        const teams = getTeams();
+
+        counts = data.counts || createInitialCounts(teams);
+
+        teams.forEach(team => {
+            if (!counts[team]) {
+                counts[team] = createEmptyTeamCount();
+            }
+        });
+
+        Object.keys(counts).forEach(team => {
+            if (!teams.includes(team)) {
+                delete counts[team];
+            }
+        });
+
+        lastSelectedTeam =
+            teams.includes(data.lastSelectedTeam)
+                ? data.lastSelectedTeam
+                : null;
+
+        const result = document.getElementById("result");
+
+        result.textContent = data.resultText || "？";
+        result.className = data.resultClass || "";
+
+        renderTable();
+        updateCompanionButton();
+
+    } catch (error) {
+        console.error("保存データを読み込めませんでした。", error);
+        resetTeams(false);
+    }
+}
+
+function resetTeams(shouldSave = true) {
+    if (isDrawing) {
+        return;
+    }
+
+    closeCompanionModal();
+
+    const teams = getTeams();
+
+    counts = createInitialCounts(teams);
+    lastSelectedTeam = null;
+
+    const result = document.getElementById("result");
+
+    result.textContent = "？";
+    result.className = "";
+
+    setMessage("");
+    renderTable();
+    updateCompanionButton();
+
+    if (shouldSave) {
+        saveData();
+    }
+}
+
+function getTotal(team) {
+    return (
+        counts[team].male +
+        counts[team].strongMale +
+        counts[team].female +
+        counts[team].strongFemale
+    );
+}
+
+function getGenderTotal(team, type) {
+    const isMale =
+        type === "male" ||
+        type === "strongMale";
+
+    if (isMale) {
+        return (
+            counts[team].male +
+            counts[team].strongMale
+        );
+    }
+
+    return (
+        counts[team].female +
+        counts[team].strongFemale
+    );
+}
+
+function findBestTeam(type) {
+    const teams = getTeams();
+
+    return teams
+        .slice()
+        .sort((teamA, teamB) => {
+            const totalDifference =
+                getTotal(teamA) - getTotal(teamB);
+
+            if (totalDifference !== 0) {
+                return totalDifference;
+            }
+
+            const categoryDifference =
+                counts[teamA][type] -
+                counts[teamB][type];
+
+            if (categoryDifference !== 0) {
+                return categoryDifference;
+            }
+
+            const genderDifference =
+                getGenderTotal(teamA, type) -
+                getGenderTotal(teamB, type);
+
+            if (genderDifference !== 0) {
+                return genderDifference;
+            }
+
+            return (
+                allTeams.indexOf(teamA) -
+                allTeams.indexOf(teamB)
+            );
+        })[0];
+}
+
+function setButtonsDisabled(disabled) {
+    const buttons = document.querySelectorAll(
+        ".button-area button, #companionButton, #teamCount"
+    );
+
+    buttons.forEach(element => {
+        element.disabled = disabled;
+    });
+}
+
+function updateCompanionButton() {
+    const companionButton =
+        document.getElementById("companionButton");
+
+    companionButton.disabled =
+        isDrawing || !lastSelectedTeam;
+}
+
+function draw(type) {
+    if (isDrawing) {
+        return;
+    }
+
+    isDrawing = true;
+    setMessage("");
+    setButtonsDisabled(true);
+
+    const teams = getTeams();
+    const result = document.getElementById("result");
+
+    let animationCount = 0;
+
+    const animation = setInterval(() => {
+        const randomTeam =
+            teams[
+                Math.floor(Math.random() * teams.length)
+            ];
+
+        result.textContent = randomTeam;
+        result.className = getTeamClass(randomTeam);
+
+        animationCount++;
+
+        if (animationCount >= 30) {
+            clearInterval(animation);
+
+            const selectedTeam = findBestTeam(type);
+
+            counts[selectedTeam][type]++;
+            lastSelectedTeam = selectedTeam;
+
+            result.textContent = selectedTeam;
+            result.className =
+                getTeamClass(selectedTeam);
+
+            renderTable();
+            saveData();
+
+            isDrawing = false;
+            setButtonsDisabled(false);
+            updateCompanionButton();
+        }
+    }, 80);
+}
+
+function openCompanionModal() {
+    if (isDrawing) {
+        return;
+    }
+
+    if (!lastSelectedTeam) {
+        setMessage(
+            "先に通常のくじを1回引いてください。"
+        );
+        return;
+    }
+
+    setMessage("");
+    document
+        .getElementById("companionModal")
+        .classList.add("show");
+}
+
+function closeCompanionModal() {
+    document
+        .getElementById("companionModal")
+        .classList.remove("show");
+}
+
+function addCompanion(type) {
+    if (isDrawing || !lastSelectedTeam) {
+        closeCompanionModal();
+        setMessage(
+            "先に通常のくじを1回引いてください。"
+        );
+        return;
+    }
+
+    const teams = getTeams();
+
+    if (!teams.includes(lastSelectedTeam)) {
+        closeCompanionModal();
+        lastSelectedTeam = null;
+        updateCompanionButton();
+        setMessage(
+            "チーム数が変更されたため、先に通常のくじを引いてください。"
+        );
+        saveData();
+        return;
+    }
+
+    counts[lastSelectedTeam][type]++;
+
+    const result = document.getElementById("result");
+    result.textContent = lastSelectedTeam;
+    result.className = getTeamClass(lastSelectedTeam);
+
+    closeCompanionModal();
+    setMessage(
+        `${lastSelectedTeam} に同行者を追加しました`
+    );
+
+    renderTable();
+    saveData();
+    updateCompanionButton();
+}
+
+function renderTable() {
+    const teams = getTeams();
+
+    const displayOrder = [
+        "ORANGE",
+        "BLUE",
+        "PINK",
+        "RED",
+        "WHITE",
+        "GREEN"
+    ];
+
+    const displayTeams =
+        displayOrder.filter(team =>
+            teams.includes(team)
+        );
+
+    const tbody =
+        document.getElementById("teamTable");
+
+    tbody.innerHTML = displayTeams
+        .map(team => {
+            const total = getTotal(team);
+
+            return `
+                <tr>
+                    <td class="${getTeamClass(team)}">
+                        <strong>${team}</strong>
+                    </td>
+                    <td>${counts[team].male}</td>
+                    <td>${counts[team].strongMale}</td>
+                    <td>${counts[team].female}</td>
+                    <td>${counts[team].strongFemale}</td>
+                    <td>${total}</td>
+                </tr>
+            `;
+        })
+        .join("");
+}
+
+document
+    .getElementById("companionModal")
+    .addEventListener("click", event => {
+        if (event.target.id === "companionModal") {
+            closeCompanionModal();
+        }
+    });
+
+loadData();
+</script>
+
+</body>
+</html>
